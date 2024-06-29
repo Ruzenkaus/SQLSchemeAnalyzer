@@ -1,0 +1,86 @@
+﻿@model hz.Models.SchemeModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Schema Analyzer</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Database Schema Analyzer</h1>
+        <form id="schemaForm" method="post" >
+            <div class="form-group">
+                <label>Enter Your Schema:</label>
+                <textarea class="form-control" id="schemaInput" rows="10" name="scheme" placeholder="Paste your database schema here..."></textarea>
+            </div>
+            <div class="form-group text-center">
+                <button type="submit" class="btn btn-primary" id="analyzeButton" asp-action="AnalyzeSQL" asp-controller="Home">Analyze Schema</button>
+                <button type="submit" class="btn btn-primary" id="providingButton" asp-action="ProvideMethods" asp-controller="Home">Provide Methods</button>
+            </div>
+        </form>
+
+        @if (Model != null)
+        {
+            <div class="mt-5">
+                <h3>Analysis Results:</h3>
+                <div id="results" class="border p-3">
+                    @foreach (var col in Model.ColumnsInner)
+                    {
+                        <p>Inner: @col.Key : @col.Value</p>
+                    }
+                    @foreach (var col in Model.ColumnsOuter)
+                    {
+                        <p>Outer: @col.Key : @col.Value</p>
+                    }
+                </div>
+                <form method="post" asp-action="GenerateQuery" asp-controller="Home">
+                    <div class="form-group">
+                        <label>Select Method:</label>
+                        <select class="form-control" asp-for="SelectedMethod" asp-items="@(new SelectList(Model.Methods))" id="methodSelect">
+                            <option value="">Select a method</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Property:</label>
+                        <select class="form-control" asp-for="SelectedProperty" asp-items="@(new SelectList(Model.Properties))">
+                            <option value="">Select a property</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="conditionDiv" style="display: none;">
+                        <label>Enter Condition:</label>
+                        <input type="text" class="form-control" asp-for="Condition" placeholder="Enter your condition here..." />
+                    </div>
+                    <div class="form-group text-center">
+                        <button type="submit" class="btn btn-primary">Generate Query</button>
+                    </div>
+                </form>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.QueryTemplate))
+            {
+                <div class="mt-5">
+                    <h3>Generated Query:</h3>
+                    <p>@Html.Raw(Model.QueryTemplate)</p>
+                </div>
+            }
+        }
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#methodSelect').change(function() {
+                var selectedMethod = $(this).val();
+                if (selectedMethod === 'HAVING') {
+                    $('#conditionDiv').show();
+                } else {
+                    $('#conditionDiv').hide();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
